@@ -73,7 +73,7 @@ func (c *Conn) newError(apiName string, handle interface{}) error {
 	return err
 }
 
-func (c *Conn) ListTables(catalog string, schema string, table string) (*Rows, error) {
+func (c *Conn) Tables(catalog string, schema string, table string) (*Rows, error) {
 	var out api.SQLHANDLE
 	ret := api.SQLAllocHandle(api.SQL_HANDLE_STMT, api.SQLHANDLE(c.h), &out)
 	if IsError(ret) {
@@ -111,6 +111,66 @@ func (c *Conn) ListTables(catalog string, schema string, table string) (*Rows, e
 	if IsError(ret) {
 		defer releaseHandle(h)
 		return nil, NewError("SQLTables", h)
+	}
+
+	os := &ODBCStmt{
+		h: h,
+		usedByStmt: true,
+	}
+
+	err = os.BindColumns()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Rows{os: os}, nil
+}
+
+func (c *Conn) Columns(catalog string, schema string, table string, column string) (*Rows, error) {
+	var out api.SQLHANDLE
+	ret := api.SQLAllocHandle(api.SQL_HANDLE_STMT, api.SQLHANDLE(c.h), &out)
+	if IsError(ret) {
+		return nil, c.newError("SQLAllocHandle", c.h)
+	}
+	h := api.SQLHSTMT(out)
+	err := drv.Stats.updateHandleCount(api.SQL_HANDLE_STMT, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	var catalogP *api.SQLWCHAR
+	if catalog != "" {
+		catalogB := api.StringToUTF16(catalog)
+		catalogP = (*api.SQLWCHAR)(unsafe.Pointer(&catalogB[0]))
+	}
+
+	var schemaP *api.SQLWCHAR
+	if schema != "" {
+		schemaB := api.StringToUTF16(schema)
+		schemaP = (*api.SQLWCHAR)(unsafe.Pointer(&schemaB[0]))
+	}
+
+	var tableP *api.SQLWCHAR
+	if table != "" {
+		tableB := api.StringToUTF16(table)
+		tableP = (*api.SQLWCHAR)(unsafe.Pointer(&tableB[0]))
+	}
+
+	var columnP *api.SQLWCHAR
+	if column != "" {
+		columnB := api.StringToUTF16(column)
+		columnP = (*api.SQLWCHAR)(unsafe.Pointer(&columnB[0]))
+	}
+
+	ret = api.SQLColumns(
+		h,
+		catalogP, api.SQL_NTS,
+		schemaP, api.SQL_NTS,
+		tableP, api.SQL_NTS,
+		columnP, api.SQL_NTS)
+	if IsError(ret) {
+		defer releaseHandle(h)
+		return nil, NewError("SQLColumns", h)
 	}
 
 	os := &ODBCStmt{
