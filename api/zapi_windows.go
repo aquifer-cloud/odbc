@@ -60,9 +60,9 @@ var (
 	procSQLRowCount        = mododbc32.NewProc("SQLRowCount")
 	procSQLSetEnvAttr      = mododbc32.NewProc("SQLSetEnvAttr")
 	procSQLSetConnectAttrW = mododbc32.NewProc("SQLSetConnectAttrW")
-	procSQLSQLTables       = mododbc32.NewProc("SQLTables")
-	procSQLSQLColumns      = mododbc32.NewProc("SQLColumns")
-	procSQLPrimaryKeys     = mododbc32.NewProc("SQLPrimaryKeys")
+	procSQLSQLTables       = mododbc32.NewProc("SQLTablesW")
+	procSQLSQLColumns      = mododbc32.NewProc("SQLColumnsW")
+	procSQLPrimaryKeys     = mododbc32.NewProc("SQLPrimaryKeysW")
 )
 
 func SQLAllocHandle(handleType SQLSMALLINT, inputHandle SQLHANDLE, outputHandle *SQLHANDLE) (ret SQLRETURN) {
@@ -191,7 +191,7 @@ func SQLSetConnectAttr(connectionHandle SQLHDBC, attribute SQLINTEGER, valuePtr 
 	return
 }
 
-func SQLTables(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength SQLINTEGER, schema *SQLWCHAR, schemaStringLength SQLINTEGER, table *SQLWCHAR, tableStringLength SQLINTEGER) (ret SQLRETURN) {
+func SQLTables(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength SQLSMALLINT, schema *SQLWCHAR, schemaStringLength SQLSMALLINT, table *SQLWCHAR, tableStringLength SQLSMALLINT) (ret SQLRETURN) {
 	r0, _, _ := syscall.Syscall9(
 		procSQLSQLTables.Addr(),
 		7,
