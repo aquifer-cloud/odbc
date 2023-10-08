@@ -62,6 +62,7 @@ var (
 	procSQLSetConnectAttrW = mododbc32.NewProc("SQLSetConnectAttrW")
 	procSQLSQLTables       = mododbc32.NewProc("SQLTables")
 	procSQLSQLColumns      = mododbc32.NewProc("SQLColumns")
+	procSQLPrimaryKeys     = mododbc32.NewProc("SQLPrimaryKeys")
 )
 
 func SQLAllocHandle(handleType SQLSMALLINT, inputHandle SQLHANDLE, outputHandle *SQLHANDLE) (ret SQLRETURN) {
@@ -207,7 +208,7 @@ func SQLTables(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength 
 	return
 }
 
-func SQLColumns(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength SQLINTEGER, schema *SQLWCHAR, schemaStringLength SQLINTEGER, table *SQLWCHAR, tableStringLength SQLINTEGER, column *SQLWCHAR, columnStringLength SQLINTEGER) (ret SQLRETURN) {
+func SQLColumns(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength SQLSMALLINT, schema *SQLWCHAR, schemaStringLength SQLSMALLINT, table *SQLWCHAR, tableStringLength SQLSMALLINT, column *SQLWCHAR, columnStringLength SQLSMALLINT) (ret SQLRETURN) {
 	r0, _, _ := syscall.Syscall9(
 		procSQLSQLColumns.Addr(),
 		9,
@@ -220,6 +221,23 @@ func SQLColumns(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength
 		uintptr(tableStringLength),
 		uintptr(unsafe.Pointer(column)),
 		uintptr(columnStringLength))
+	ret = SQLRETURN(r0)
+	return
+}
+
+func SQLPrimaryKeys(statementHandle SQLHSTMT, catalog *SQLWCHAR, catalogStringLength SQLSMALLINT, schema *SQLWCHAR, schemaStringLength SQLSMALLINT, table *SQLWCHAR, tableStringLength SQLSMALLINT) (ret SQLRETURN) {
+	r0, _, _ := syscall.Syscall9(
+		procSQLPrimaryKeys.Addr(),
+		7,
+		uintptr(statementHandle),
+		uintptr(unsafe.Pointer(catalog)),
+		uintptr(catalogStringLength),
+		uintptr(unsafe.Pointer(schema)),
+		uintptr(schemaStringLength),
+		uintptr(unsafe.Pointer(table)),
+		uintptr(tableStringLength),
+		0,
+		0)
 	ret = SQLRETURN(r0)
 	return
 }
